@@ -1,0 +1,23 @@
+{
+  "name": "svg-piano",
+  "version": "1.0.0",
+  "description": "correctly sized svg piano for the web",
+  "main": "keyboard.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel demo/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felixroos/svg-piano.git"
+  },
+  "author": "Felix Roos <flix91@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/felixroos/svg-piano/issues"
+  },
+  "homepage": "https://github.com/felixroos/svg-piano#readme",
+  "devDependencies": {
+    "parcel": "^1.12.4"
+  }
+}
