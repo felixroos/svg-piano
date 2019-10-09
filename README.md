@@ -7,6 +7,7 @@ This lib includes the rendering logic for a [correctly sized piano](https://de.w
 ## Demo
 
 - [React Demo](https://stackblitz.com/edit/piano-keyboard?file=Keyboard.js)
+- [Svelte Demo](https://svelte.dev/repl/95387840d35344508ede3de361b149ea?version=3.12.1)
 - see demo folder for usage with plain js ```npm run start``` to run 
 
 ## Options
