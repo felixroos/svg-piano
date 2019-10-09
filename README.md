@@ -20,3 +20,10 @@ This lib includes the rendering logic for a [correctly sized piano](https://de.w
 - stroke: stroke style
 - palette: array to customize color with format ```['black', 'white']```
 - visibleKeys: which keys should be visible? shows all if not specified
+
+## Todo
+
+- custom start
+- custom colors
+- labels
+- build as web component using stencil
