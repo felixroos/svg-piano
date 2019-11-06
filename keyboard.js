@@ -70,7 +70,7 @@ export const _defaultOptions = {
   lowerWidth: 23.6,
   palette: ['#39383D', '#F2F2EF'],
   stroke: '#39383D',
-  strokeWidth: 2,
+  strokeWidth: 1,
   offsetY: 2,
   offsetX: 0,
   upperHeight: 100,
@@ -81,6 +81,19 @@ export const _defaultOptions = {
 
 export function defaultOptions(options) {
   return Object.assign({}, _defaultOptions, options);
+}
+
+/** computes keyCount and keyOffset from range array ([SPN,SPN]) */
+export function rangeOptions(range) {
+  const pitches = range.map(note => note.slice(0, -1));
+  const first = keyboard.find(key => key.pitches.includes(pitches[0]));
+  const last = keyboard.find(key => key.pitches.includes(pitches[1]));
+  const offsetLeft = keyboard.indexOf(first);
+  const offsetRight = 12 - keyboard.indexOf(last);
+  const octaves = range.map(note => parseInt(note.slice(note.length - 1)));
+  const keyCount =
+    (octaves[1] - octaves[0]) * 12 - offsetLeft - offsetRight + 1;
+  return { keyCount, keyOffset: offsetLeft };
 }
 
 export function getKeySizes(options) {
@@ -108,6 +121,12 @@ export function getKeySizes(options) {
 export function renderKeys(options) {
   options = defaultOptions(options);
   const keySizes = getKeySizes(options);
+  if (options.range) {
+    options = {
+      ...options,
+      ...rangeOptions(options.range)
+    };
+  }
   let {
     keyCount,
     scaleY,
@@ -115,25 +134,50 @@ export function renderKeys(options) {
     visibleKeys,
     lowerWidth,
     strokeWidth,
+    keyOffset
   } = options;
-  return Array(keyCount)
+
+  return Array(keyCount + keyOffset)
     .fill(0)
     .map((key, index, _keys) => keySizes[index % 12])
     .map((key, index, _keys) => ({
+      index,
       fill: key.fill,
       strokeWidth: key.strokeWidth,
       stroke: key.stroke,
       upperHeight: key.upperHeight * scaleY,
       lowerHeight: key.lowerHeight * scaleY,
-      upperWidth: key.upperWidth * scaleX,
+      upperWidth: upperWidth(key, index, keyOffset, keyCount) * scaleX,
       lowerWidth: key.lowerWidth * scaleX,
-      upperOffset: key.upperOffset * scaleX,
+      upperOffset: upperOffset(key, index, keyOffset, keyCount) * scaleX,
       visible:
         !visibleKeys ||
         !!key.pitches.find(pitch => visibleKeys.includes(pitch)),
-      offsetX: keyOffset(index, _keys, lowerWidth) * scaleX + strokeWidth
-    }));
-  // fill =!visible ? 'rgba(100,100,100,0.3): key.fill
+      offsetX:
+        getKeyOffset(index, _keys, lowerWidth, keyOffset) * scaleX +
+        Math.ceil(strokeWidth / 2)
+    }))
+    .filter(key => key.index >= keyOffset);
+}
+
+export function upperWidth(key, index, offset, keyCount) {
+  const isFirst = index => index === offset;
+  const isLast = index => index === keyCount + offset - 1;
+  if (isFirst(index)) {
+    return key.upperWidth + key.upperOffset;
+  }
+  if (isLast(index)) {
+    return key.lowerWidth - key.upperOffset;
+  }
+  return key.upperWidth;
+}
+
+function upperOffset(key, index, keyOffset, keyCount) {
+  const isFirst = index => index === keyOffset;
+  if (isFirst(index)) {
+    return 0;
+  }
+  return key.upperOffset;
 }
 
 export function whiteIndex(index) {
@@ -145,13 +189,20 @@ export function whiteIndex(index) {
   );
 }
 
-export function keyOffset(index, keys, lowerWidth) {
+export function getKeyOffset(index, keys, lowerWidth, keyOffset = 0) {
   const wi = whiteIndex(index);
+  const oi = whiteIndex(keyOffset);
+  let firstOffset = keys[keyOffset].upperOffset;
+  if (accidentals.includes(keyOffset % 12)) {
+    const whiteKeyBefore = keyboard[(keyOffset + 12 - 1) % 12];
+    firstOffset -=
+      lowerWidth - (whiteKeyBefore.upperWidth + whiteKeyBefore.upperOffset);
+  }
   return !accidentals.includes(index % 12)
-    ? wi * lowerWidth
+    ? wi * lowerWidth - oi * lowerWidth
     : keys
-        .slice(0, index)
-        .reduce((sum, _key, _index) => sum + _key.upperWidth, 0);
+        .slice(keyOffset, index)
+        .reduce((sum, _key, _index) => sum + _key.upperWidth, 0) + firstOffset;
 }
 
 export function totalDimensions(options) {
@@ -165,7 +216,7 @@ export function totalDimensions(options) {
     strokeWidth
   } = defaultOptions(options);
   return [
-    scaleX * lowerWidth * whiteIndex(keyCount),
+    scaleX * lowerWidth * whiteIndex(keyCount + 1),
     (lowerHeight + upperHeight) * scaleY
   ].map(c => Math.round(c + strokeWidth * 2)); // >svg adds stroke around actual widths
 }
@@ -190,7 +241,7 @@ export function getPoints(key, round = true) {
     [lowerWidth + offsetX, upperHeight + offsetY],
     [upperWidth + upperOffset + offsetX, upperHeight + offsetY],
     [upperWidth + upperOffset + offsetX, offsetY]
-  ];//.map(p => p.map(c => (round ? Math.floor(c) : c)));
+  ]; //.map(p => p.map(c => (round ? Math.floor(c) : c)));
 }
 
 export function renderPiano(container, _options) {
