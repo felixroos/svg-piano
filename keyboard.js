@@ -192,3 +192,36 @@ export function getPoints(key, round = true) {
     [upperWidth + upperOffset + offsetX, offsetY]
   ];//.map(p => p.map(c => (round ? Math.floor(c) : c)));
 }
+
+export function renderPiano(container, _options) {
+  const xmlns = 'http://www.w3.org/2000/svg';
+  const options = defaultOptions(_options);
+
+  const keys = renderKeys(options);
+  const dimensions = totalDimensions(options);
+  const svg = document.createElementNS(xmlns, 'svg');
+
+  svg.setAttributeNS(
+    null,
+    'viewBox',
+    '0 0 ' + dimensions[0] + ' ' + dimensions[1]
+  );
+  svg.setAttributeNS(null, 'style', 'margin:0');
+  svg.setAttributeNS(null, 'width', dimensions[0]);
+  svg.setAttributeNS(null, 'height', dimensions[1]);
+
+  keys.forEach(key => {
+    const points = getPoints(key)
+      .map(p => p.join(','))
+      .join(' ');
+    const polygon = document.createElementNS(xmlns, 'polygon');
+    polygon.setAttributeNS(null, 'points', points);
+    polygon.setAttributeNS(
+      null,
+      'style',
+      `fill:${key.fill};stroke:${key.stroke};stroke-width:${key.strokeWidth}`
+    );
+    svg.appendChild(polygon);
+  });
+  container.appendChild(svg);
+}
