@@ -134,30 +134,53 @@ export function renderKeys(options) {
     visibleKeys,
     lowerWidth,
     strokeWidth,
-    keyOffset
+    keyOffset,
+    colorize
   } = options;
 
   return Array(keyCount + keyOffset)
     .fill(0)
     .map((key, index, _keys) => keySizes[index % 12])
-    .map((key, index, _keys) => ({
-      index,
-      fill: key.fill,
-      strokeWidth: key.strokeWidth,
-      stroke: key.stroke,
-      upperHeight: key.upperHeight * scaleY,
-      lowerHeight: key.lowerHeight * scaleY,
-      upperWidth: upperWidth(key, index, keyOffset, keyCount) * scaleX,
-      lowerWidth: key.lowerWidth * scaleX,
-      upperOffset: upperOffset(key, index, keyOffset, keyCount) * scaleX,
-      visible:
-        !visibleKeys ||
-        !!key.pitches.find(pitch => visibleKeys.includes(pitch)),
-      offsetX:
-        getKeyOffset(index, _keys, lowerWidth, keyOffset) * scaleX +
-        Math.ceil(strokeWidth / 2)
-    }))
+    .map((key, index, _keys) => {
+      const octave = getOctave(index, options.range, keyOffset);
+      const notes = key.pitches.map(pitch => pitch + octave);
+      return {
+        index,
+        notes,
+        fill: getColorization(notes, colorize) || key.fill,
+        strokeWidth: key.strokeWidth,
+        stroke: key.stroke,
+        upperHeight: key.upperHeight * scaleY,
+        lowerHeight: key.lowerHeight * scaleY,
+        upperWidth: upperWidth(key, index, keyOffset, keyCount) * scaleX,
+        lowerWidth: key.lowerWidth * scaleX,
+        upperOffset: upperOffset(key, index, keyOffset, keyCount) * scaleX,
+        visible:
+          !visibleKeys ||
+          !!key.pitches.find(pitch => visibleKeys.includes(pitch)),
+        offsetX:
+          getKeyOffset(index, _keys, lowerWidth, keyOffset) * scaleX +
+          Math.ceil(strokeWidth / 2)
+      };
+    })
     .filter(key => key.index >= keyOffset);
+}
+
+export function getOctave(index, range, keyOffset) {
+  const overflow = Math.floor(index / 12);
+  const octaves = range.map(note => parseInt(note.slice(note.length - 1)));
+  const octave = overflow + octaves[0];
+  return octave;
+}
+
+export function getColorization(notes, colorize) {
+  if (!colorize) {
+    return null;
+  }
+  const match = colorize.find(
+    color => !!color.keys.find(key => notes.includes(key))
+  );
+  return match ? match.color : null;
 }
 
 export function upperWidth(key, index, offset, keyCount) {
@@ -267,6 +290,14 @@ export function renderPiano(container, _options) {
       .join(' ');
     const polygon = document.createElementNS(xmlns, 'polygon');
     polygon.setAttributeNS(null, 'points', points);
+    polygon.setAttributeNS(
+      null,
+      'class',
+      key.notes.reduce(
+        (classes, note, index) => classes + (index ? ' ' : '') + 'key-' + note,
+        ''
+      )
+    );
     polygon.setAttributeNS(
       null,
       'style',
