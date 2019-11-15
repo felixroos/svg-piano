@@ -278,13 +278,14 @@ export function getTextNode(key) {
     upperHeight,
     lowerHeight
   } = defaultOptions(key);
-  const radius = options.scaleX * 5;
+  const radius = key.scaleX * 5;
   return {
     x: offsetX + upperOffset + upperWidth / 2,
     y: upperHeight + lowerHeight - radius / 2,
     'text-anchor': 'middle',
     'font-size': radius,
-    'font-family': 'helvetica'
+    'font-family': 'helvetica',
+    radius
   };
 }
 
