@@ -112,6 +112,7 @@ export function getKeySizes(options) {
       lowerHeight: accidentals.includes(index) ? 0 : lowerHeight,
       lowerWidth: accidentals.includes(index) ? key.upperWidth : lowerWidth,
       fill: accidentals.includes(index) ? palette[0] : palette[1],
+      contrast: accidentals.includes(index) ? palette[1] : palette[0],
       stroke,
       strokeWidth
     })
@@ -147,7 +148,9 @@ export function renderKeys(options) {
       return {
         index,
         notes,
+        scaleX,
         fill: getColorization(notes, colorize) || key.fill,
+        contrast: key.contrast,
         strokeWidth: key.strokeWidth,
         stroke: key.stroke,
         upperHeight: key.upperHeight * scaleY,
@@ -267,7 +270,7 @@ export function getPoints(key, round = true) {
   ];
 }
 
-export function getTextPosition(key) {
+export function getTextNode(key) {
   const {
     offsetX,
     upperOffset,
@@ -275,7 +278,14 @@ export function getTextPosition(key) {
     upperHeight,
     lowerHeight
   } = defaultOptions(key);
-  return [offsetX + upperOffset + upperWidth / 2, upperHeight + lowerHeight];
+  const radius = options.scaleX * 5;
+  return {
+    x: offsetX + upperOffset + upperWidth / 2,
+    y: upperHeight + lowerHeight - radius / 2,
+    'text-anchor': 'middle',
+    'font-size': radius,
+    'font-family': 'helvetica'
+  };
 }
 
 export function renderPiano(container, _options) {
