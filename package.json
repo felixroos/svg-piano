@@ -1,6 +1,6 @@
 {
   "name": "svg-piano",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "correctly sized svg piano for the web",
   "main": "keyboard.js",
   "scripts": {
