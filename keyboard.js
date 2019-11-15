@@ -264,7 +264,18 @@ export function getPoints(key, round = true) {
     [lowerWidth + offsetX, upperHeight + offsetY],
     [upperWidth + upperOffset + offsetX, upperHeight + offsetY],
     [upperWidth + upperOffset + offsetX, offsetY]
-  ]; //.map(p => p.map(c => (round ? Math.floor(c) : c)));
+  ];
+}
+
+export function getTextPosition(key) {
+  const {
+    offsetX,
+    upperOffset,
+    upperWidth,
+    upperHeight,
+    lowerHeight
+  } = defaultOptions(key);
+  return [offsetX + upperOffset + upperWidth / 2, upperHeight + lowerHeight];
 }
 
 export function renderPiano(container, _options) {
