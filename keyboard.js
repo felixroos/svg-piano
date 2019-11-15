@@ -92,7 +92,7 @@ export function rangeOptions(range) {
   const offsetRight = 12 - keyboard.indexOf(last);
   const octaves = range.map(note => parseInt(note.slice(note.length - 1)));
   const keyCount =
-    (octaves[1] - octaves[0]) * 12 - offsetLeft - offsetRight + 1;
+    (octaves[1] - octaves[0] + 1) * 12 - offsetLeft - offsetRight + 1;
   return { keyCount, keyOffset: offsetLeft };
 }
 
