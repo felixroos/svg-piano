@@ -76,10 +76,17 @@ export const _defaultOptions = {
   upperHeight: 100,
   lowerHeight: 45,
   keyCount: 88,
-  range: ['A0', 'C8']
+  range: ['A0', 'C8'],
+  topLabels: false
 }; // visibleKeys
 
 export function defaultOptions(options) {
+  if (options.range) {
+    options = {
+      ...options,
+      ...rangeOptions(options.range)
+    };
+  }
   return Object.assign({}, _defaultOptions, options);
 }
 
@@ -122,12 +129,6 @@ export function getKeySizes(options) {
 export function renderKeys(options) {
   options = defaultOptions(options);
   const keySizes = getKeySizes(options);
-  if (options.range) {
-    options = {
-      ...options,
-      ...rangeOptions(options.range)
-    };
-  }
   let {
     keyCount,
     scaleY,
@@ -149,6 +150,7 @@ export function renderKeys(options) {
         index,
         notes,
         scaleX,
+        scaleY,
         fill: getColorization(notes, colorize) || key.fill,
         contrast: key.contrast,
         strokeWidth: key.strokeWidth,
@@ -167,6 +169,41 @@ export function renderKeys(options) {
       };
     })
     .filter(key => key.index >= keyOffset);
+}
+
+export function getKeyElements(options) {
+  options = defaultOptions(options);
+  const keys = renderKeys(options);
+  return keys.map(key => {
+    if (!key.visible) {
+      return;
+    }
+    let circle, text;
+    const label = options.labels
+      ? key.notes.find(n => !!Object.keys(options.labels).includes(n))
+      : '';
+
+    if (label) {
+      const textElements = getTextElements(key, options.topLabels);
+      circle = textElements.circle;
+      text = textElements.text;
+      text.value = options.labels[label];
+    }
+    const points = getPoints(key);
+    return {
+      key,
+      polygon: {
+        points: points.map(p => p.join(',')).join(' '),
+        style: {
+          fill: key.fill,
+          stroke: key.stroke,
+          strokeWidth: key.strokeWidth
+        }
+      },
+      circle,
+      text
+    };
+  });
 }
 
 export function getOctave(index, range, keyOffset) {
@@ -241,6 +278,7 @@ export function totalDimensions(options) {
     upperHeight,
     strokeWidth
   } = defaultOptions(options);
+
   return [
     scaleX * lowerWidth * whiteIndex(keyCount + 1),
     (lowerHeight + upperHeight) * scaleY
@@ -270,30 +308,41 @@ export function getPoints(key, round = true) {
   ];
 }
 
-export function getTextNode(key) {
+export function getTextElements(key, top = false, fill = 'white') {
   const {
     offsetX,
+    upperHeight,
+    lowerHeight,
     upperOffset,
     upperWidth,
-    upperHeight,
-    lowerHeight
+    strokeWidth
   } = defaultOptions(key);
-  const radius = key.scaleX * 5;
+  const radius = (key.scaleX * (12.7 - strokeWidth * 2)) / 2;
+  const w = key.lowerWidth || key.upperWidth;
+  const x = top ? offsetX + upperWidth / 2 + upperOffset : offsetX + w / 2;
+  const y = top ? radius * 2 : upperHeight + lowerHeight - radius;
   return {
-    x: offsetX + upperOffset + upperWidth / 2,
-    y: upperHeight + lowerHeight - radius / 2,
-    'text-anchor': 'middle',
-    'font-size': radius,
-    'font-family': 'helvetica',
-    radius
+    circle: {
+      cx: x,
+      cy: y - radius / 3,
+      r: radius,
+      fill,
+      stroke: key.stroke,
+      strokeWidth: key.strokeWidth
+    },
+    text: {
+      x,
+      y,
+      textAnchor: 'middle',
+      fontSize: radius,
+      fontFamily: 'helvetica'
+    }
   };
 }
 
 export function renderPiano(container, _options) {
   const xmlns = 'http://www.w3.org/2000/svg';
   const options = defaultOptions(_options);
-
-  const keys = renderKeys(options);
   const dimensions = totalDimensions(options);
   const svg = document.createElementNS(xmlns, 'svg');
 
@@ -306,13 +355,16 @@ export function renderPiano(container, _options) {
   svg.setAttributeNS(null, 'width', dimensions[0]);
   svg.setAttributeNS(null, 'height', dimensions[1]);
 
-  keys.forEach(key => {
-    const points = getPoints(key)
-      .map(p => p.join(','))
-      .join(' ');
-    const polygon = document.createElementNS(xmlns, 'polygon');
-    polygon.setAttributeNS(null, 'points', points);
-    polygon.setAttributeNS(
+  const keys = getKeyElements(options);
+
+  keys.forEach(elements => {
+    const { key, polygon, circle, text } = elements;
+    const p = document.createElementNS(xmlns, 'polygon');
+    p.setAttributeNS(null, 'points', polygon.points);
+    p.setAttributeNS(null, 'fill', polygon.style.fill);
+    p.setAttributeNS(null, 'stroke', polygon.style.stroke);
+    p.setAttributeNS(null, 'stroke-width', polygon.style.strokeWidth);
+    p.setAttributeNS(
       null,
       'class',
       key.notes.reduce(
@@ -320,12 +372,28 @@ export function renderPiano(container, _options) {
         ''
       )
     );
-    polygon.setAttributeNS(
-      null,
-      'style',
-      `fill:${key.fill};stroke:${key.stroke};stroke-width:${key.strokeWidth}`
-    );
-    svg.appendChild(polygon);
+    svg.appendChild(p);
+    if (circle) {
+      const c = document.createElementNS(xmlns, 'circle');
+      c.setAttributeNS(null, 'cx', circle.cx);
+      c.setAttributeNS(null, 'cy', circle.cy);
+      c.setAttributeNS(null, 'r', circle.r);
+      c.setAttributeNS(null, 'fill', circle.fill);
+      c.setAttributeNS(null, 'stroke', circle.stroke);
+      c.setAttributeNS(null, 'stroke-width', circle.strokeWidth);
+      svg.appendChild(c);
+    }
+
+    if (text) {
+      const t = document.createElementNS(xmlns, 'text');
+      t.setAttributeNS(null, 'x', text.x);
+      t.setAttributeNS(null, 'y', text.y);
+      t.setAttributeNS(null, 'text-anchor', text.textAnchor);
+      t.setAttributeNS(null, 'font-size', text.fontSize);
+      t.setAttributeNS(null, 'font-family', text.fontFamily);
+      t.innerHTML = text.value;
+      svg.appendChild(t);
+    }
   });
   container.appendChild(svg);
 }
