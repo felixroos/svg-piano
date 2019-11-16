@@ -24,6 +24,17 @@ This lib includes the rendering logic for a [correctly sized piano](https://de.w
 ];
 ```
 
+- labels: add labels to certain keys:
+
+```js
+{
+  C2: '1',
+  Eb2: 'b3',
+  G2: '5',
+  Bb2: 'b7',
+}
+```
+
 - visibleKeys: which pitches should be visible? e.g `['G','A','B','C','D','E','F#']`
 - scaleX: changes scaling in x direction
 - scaleY: changes scaling in y direction
@@ -31,9 +42,3 @@ This lib includes the rendering logic for a [correctly sized piano](https://de.w
 - lowerHeight: px height of lower area
 - strokeWidth: border width in px
 
-## Todo
-
-- ~~custom start~~
-- ~~custom colors~~
-- labels
-- build as web component using stencil => see svg-piano-component project
