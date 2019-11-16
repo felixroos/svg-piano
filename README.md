@@ -1,8 +1,8 @@
 # SVG Piano
 
-![piano](https://upload.wikimedia.org/wikipedia/commons/4/48/Pianoteilung.svg)
-
 This lib includes the rendering logic for a [correctly sized piano](https://de.wikipedia.org/wiki/Datei:Pianoteilung.svg).
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Pianoteilung.svg" width="400"/>
 
 ## Demo
 
@@ -10,7 +10,7 @@ This lib includes the rendering logic for a [correctly sized piano](https://de.w
 - [Svelte Demo](https://svelte.dev/repl/95387840d35344508ede3de361b149ea?version=3.12.1)
 - see demo folder for usage with plain js `npm run start` to run
 
-## Options
+### Options
 
 - range: lowest and highest key e.g. `['A1','C6']`
 - palette: array to customize color with format `['black', 'white']`
@@ -41,4 +41,3 @@ This lib includes the rendering logic for a [correctly sized piano](https://de.w
 - upperHeight: px height of upper area
 - lowerHeight: px height of lower area
 - strokeWidth: border width in px
-
